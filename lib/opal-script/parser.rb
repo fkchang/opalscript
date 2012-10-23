@@ -654,8 +654,7 @@ module OpalScript
             @scope.add_temp "def = (#{current_self}._isObject ? #{current_self} : #{current_self}.prototype)"
           end
 
-          code = "\n#@indent#{@scope.to_vars}\n#@indent#{code}"
-
+          code = "#{@scope.to_vars}#{@indent}#{code}"
           scope_name = @scope.identity
         end
       end
@@ -664,7 +663,8 @@ module OpalScript
         itercode = "function(#{params.join ', '}) {\n#{code}\n#@indent}"
         itercode = "#{scope_name} = #{itercode}" if scope_name
 
-        call << ("(%s = %s, %s._s = %s, %s)" % [tmp, itercode, tmp, current_self, tmp])
+        @helpers[:block] = true
+        call.last << s(:js_tmp, "__block(#{itercode}, #{current_self})")
 
         process call, level
       end
@@ -743,7 +743,7 @@ module OpalScript
     # s(:call, recv, :mid, s(:arglist))
     # s(:call, nil, :mid, s(:arglist))
     def process_call(sexp, level)
-      recv, meth, arglist, iter = sexp
+      recv, meth, arglist = sexp
       mid = mid_to_jsid meth.to_s
 
       case meth
@@ -767,41 +767,18 @@ module OpalScript
 
       splat = arglist[1..-1].any? { |a| a.first == :splat }
 
-      if Array === arglist.last and arglist.last.first == :block_pass
-        block   = process s(:js_tmp, process(arglist.pop, :expr)), :expr
-      elsif iter
-        block   = iter
-      end
-
       recv ||= s(:self)
 
-      if block
-        tmprecv = @scope.new_temp
-      elsif splat and recv != [:self] and recv[0] != :lvar
+      if splat and recv != [:self] and recv[0] != :lvar
         tmprecv = @scope.new_temp
       end
 
       args      = ""
-
       recv_code = process recv, :recv
+      args      = process arglist, :expr
 
-      args = process arglist, :expr
-
-      result = if block
-        dispatch = "(%s = %s, %s%s._p = %s, %s%s" %
-          [tmprecv, recv_code, tmprecv, mid, block, tmprecv, mid]
-
-        if splat
-          "%s.apply(null, %s))" % [dispatch, args]
-        else
-          "%s(%s))" % [dispatch, args]
-        end
-      else
-        dispatch = tmprecv ? "(#{tmprecv} = #{recv_code})#{mid}" : "#{recv_code}#{mid}"
-        splat ? "#{dispatch}.apply(#{tmprecv || recv_code}, #{args})" : "#{dispatch}(#{args})"
-      end
-
-      result
+      dispatch = tmprecv ? "(#{tmprecv} = #{recv_code})#{mid}" : "#{recv_code}#{mid}"
+      splat ? "#{dispatch}.apply(#{tmprecv || recv_code}, #{args})" : "#{dispatch}(#{args})"
     end
 
     # s(:arglist, [arg [, arg ..]])
@@ -944,7 +921,7 @@ module OpalScript
       indent do
         in_scope(:module) do
           @scope.name = name
-          @scope.add_temp "#{ @scope.proto } = #{name}.prototype", "__scope = #{name}._scope"
+          @scope.add_temp "__scope = #{name}._scope"
           body = process body, :stmt
           code = @indent + @scope.to_vars + "\n\n#@indent" + body + "\n#@indent" + @scope.to_donate_methods
         end
@@ -1302,7 +1279,7 @@ module OpalScript
         len = rhs.length - 1 # we are guaranteed an array of this length
         code  = ["#{tmp} = #{process rhs, :expr}"]
       elsif rhs[0] == :to_ary
-        code = ["((#{tmp} = #{process rhs[1], :expr})._isArray ? #{tmp} : (#{tmp} = [#{tmp}]))"]
+        code = ["#{tmp} = #{process rhs[1], :expr}"]
       elsif rhs[0] == :splat
         code = ["#{tmp} = #{process rhs[1], :expr}"]
       else
@@ -1310,17 +1287,12 @@ module OpalScript
       end
 
       lhs.each_with_index do |l, idx|
-
         if l.first == :splat
           s = l[1]
           s << s(:js_tmp, "__slice.call(#{tmp}, #{idx})")
           code << process(s, :expr)
         else
-          if idx >= len
-            l << s(:js_tmp, "(#{tmp}[#{idx}] == null ? nil : #{tmp}[#{idx}])")
-          else
-            l << s(:js_tmp, "#{tmp}[#{idx}]")
-          end
+          l << s(:js_tmp, "#{tmp}[#{idx}]")
           code << process(l, :expr)
         end
       end
@@ -1368,17 +1340,14 @@ module OpalScript
 
     # s(:gvar, gvar)
     def process_gvar(sexp, level)
-      gvar = sexp.shift.to_s[1..-1]
-      @helpers['gvars'] = true
-      "__gvars[#{gvar.inspect}]"
+      sexp.shift.to_s[1..-1]
     end
 
     # s(:gasgn, :gvar, rhs)
     def process_gasgn(sexp, level)
       gvar = sexp[0].to_s[1..-1]
       rhs  = sexp[1]
-      @helpers['gvars'] = true
-      "__gvars[#{gvar.to_s.inspect}] = #{process rhs, :expr}"
+      "#{gvar} = #{process rhs, :expr}"
     end
 
     # s(:const, :const)

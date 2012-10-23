@@ -96,7 +96,7 @@ module OpalScript
       ##
       # Vars to use inside each scope
       def to_vars
-        vars = @locals.map { |l| "#{l} = nil" }
+        vars = @locals.map { |l| l }
         vars.push *@temps
 
         iv = ivars.map do |ivar|
