@@ -1,0 +1,18 @@
+PATH
+  remote: .
+  specs:
+    opal-script (0.0.1)
+
+GEM
+  remote: http://rubygems.org/
+  specs:
+    racc (1.4.9)
+    rake (0.9.2.2)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  opal-script!
+  racc
+  rake

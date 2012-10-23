@@ -1,0 +1,16 @@
+#! /usr/bin/env ruby
+
+require 'opal-script'
+
+first = ARGV.first
+
+if first.nil?
+ puts "Usage: opal path/to/file.rb"
+ puts 'Usage: opal "code to compile"'
+elsif first == '-v' or first == '--version'
+  puts Opal::VERSION
+elsif File.exist? first
+  puts OpalScript.parse File.read(first)
+else
+  puts OpalScript.parse(first)
+end
