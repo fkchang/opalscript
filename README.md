@@ -31,3 +31,4 @@ Working design docs - will be updated/amended/replaced/scrapped/thrown away etc.
 
 * Generator outputs 'null' for nil
 * Generator now uses js truthy tests for if statements, && expressions and || expressions
+* Parser now outputs all operators (+, -, /, *, <, <=, >=, >, ==, ===) as native js operators

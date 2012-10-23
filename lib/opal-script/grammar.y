@@ -492,15 +492,15 @@ arg:
     }
   | arg '|' arg
     {
-      result = new_call val[0], :"|", s(:arglist, val[2])
+      result = s(:operator, :"|", val[0], val[2])
     }
   | arg '^' arg
     {
-      result = new_call val[0], :"^", s(:arglist, val[2])
+      result = s(:operator, :"^", val[0], val[2])
     }
   | arg '&' arg
     {
-      result = new_call val[0], :"&", s(:arglist, val[2])
+      result = s(:operator, :"&", val[0], val[2])
     }
   | arg '<=>' arg
     {
@@ -508,31 +508,31 @@ arg:
     }
   | arg '>' arg
     {
-      result = new_call val[0], :">", s(:arglist, val[2])
+      result = s(:operator, :">", val[0], val[2])
     }
   | arg '>=' arg
     {
-      result = new_call val[0], :">=", s(:arglist, val[2])
+      result = s(:operator, :">=", val[0], val[2])
     }
   | arg '<' arg
     {
-      result = new_call val[0], :"<", s(:arglist, val[2])
+      result = s(:operator, :"<", val[0], val[2])
     }
   | arg '<=' arg
     {
-      result = new_call val[0], :"<=", s(:arglist, val[2])
+      result = s(:operator, :"<=", val[0], val[2])
     }
   | arg '==' arg
     {
-      result = new_call val[0], :"==", s(:arglist, val[2])
+      result = s(:operator, :"==", val[0], val[2])
     }
   | arg '===' arg
     {
-      result = new_call val[0], :"===", s(:arglist, val[2])
+      result = s(:operator, :"===", val[0], val[2])
     }
   | arg '!=' arg
     {
-      result = s(:not, new_call(val[0], :"==", s(:arglist, val[2])))
+      result = s(:operator, :"!=", val[0], val[2])
     }
   | arg '=~' arg
     {
@@ -552,11 +552,11 @@ arg:
     }
   | arg '<<' arg
     {
-      result = new_call val[0], :"<<", s(:arglist, val[2])
+      result = s(:operator, :"<<", val[0], val[2])
     }
   | arg '>>' arg
     {
-      result = new_call val[0], :">>", s(:arglist, val[2])
+      result = s(:operator, :">>", val[0], val[2])
     }
   | arg '&&' arg
     {

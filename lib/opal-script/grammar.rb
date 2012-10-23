@@ -3494,19 +3494,19 @@ def _reduce_189(val, _values, result)
 end
 
 def _reduce_190(val, _values, result)
-      result = new_call val[0], :"|", s(:arglist, val[2])
+      result = s(:operator, :"|", val[0], val[2])
     
     result
 end
 
 def _reduce_191(val, _values, result)
-      result = new_call val[0], :"^", s(:arglist, val[2])
+      result = s(:operator, :"^", val[0], val[2])
     
     result
 end
 
 def _reduce_192(val, _values, result)
-      result = new_call val[0], :"&", s(:arglist, val[2])
+      result = s(:operator, :"&", val[0], val[2])
     
     result
 end
@@ -3518,43 +3518,43 @@ def _reduce_193(val, _values, result)
 end
 
 def _reduce_194(val, _values, result)
-      result = new_call val[0], :">", s(:arglist, val[2])
+      result = s(:operator, :">", val[0], val[2])
     
     result
 end
 
 def _reduce_195(val, _values, result)
-      result = new_call val[0], :">=", s(:arglist, val[2])
+      result = s(:operator, :">=", val[0], val[2])
     
     result
 end
 
 def _reduce_196(val, _values, result)
-      result = new_call val[0], :"<", s(:arglist, val[2])
+      result = s(:operator, :"<", val[0], val[2])
     
     result
 end
 
 def _reduce_197(val, _values, result)
-      result = new_call val[0], :"<=", s(:arglist, val[2])
+      result = s(:operator, :"<=", val[0], val[2])
     
     result
 end
 
 def _reduce_198(val, _values, result)
-      result = new_call val[0], :"==", s(:arglist, val[2])
+      result = s(:operator, :"==", val[0], val[2])
     
     result
 end
 
 def _reduce_199(val, _values, result)
-      result = new_call val[0], :"===", s(:arglist, val[2])
+      result = s(:operator, :"===", val[0], val[2])
     
     result
 end
 
 def _reduce_200(val, _values, result)
-      result = s(:not, new_call(val[0], :"==", s(:arglist, val[2])))
+      result = s(:operator, :"!=", val[0], val[2])
     
     result
 end
@@ -3584,13 +3584,13 @@ def _reduce_204(val, _values, result)
 end
 
 def _reduce_205(val, _values, result)
-      result = new_call val[0], :"<<", s(:arglist, val[2])
+      result = s(:operator, :"<<", val[0], val[2])
     
     result
 end
 
 def _reduce_206(val, _values, result)
-      result = new_call val[0], :">>", s(:arglist, val[2])
+      result = s(:operator, :">>", val[0], val[2])
     
     result
 end

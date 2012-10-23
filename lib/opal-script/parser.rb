@@ -493,18 +493,8 @@ module OpalScript
     end
 
     def process_operator(sexp, level)
-      meth, recv, arg = sexp
-      mid = mid_to_jsid meth.to_s
-
-      with_temp do |a|
-        with_temp do |b|
-          l = process recv, :expr
-          r = process arg, :expr
-
-          "(%s = %s, %s = %s, typeof(%s) === 'number' ? %s %s %s : %s%s(%s))" %
-            [a, l, b, r, a, a, meth.to_s, b, a, mid, b]
-        end
-      end
+      op, lhs, rhs = sexp
+      "#{ process lhs, :expr } #{ op } #{ process rhs, :expr }"
     end
 
     def js_block_given(sexp, level)
