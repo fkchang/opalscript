@@ -86,7 +86,7 @@ module OpalScript
       end
 
       def proto
-        "#{ @name }_prototype"
+        "#{ @name }.prototype"
       end
       
       def should_donate?

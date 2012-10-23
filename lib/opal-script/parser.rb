@@ -629,14 +629,7 @@ module OpalScript
 
       indent do
         in_scope(:iter) do
-          args[1..-1].each do |arg|
-           arg = arg[1]
-           arg = "#{arg}$" if RESERVED.include? arg.to_s
-            code += "if (#{arg} == null) #{arg} = nil;\n"
-          end
-
           params = js_block_args(args[1..-1])
-          # params.unshift '_$'
 
           if splat
             params << splat
@@ -648,8 +641,7 @@ module OpalScript
             @scope.add_temp block_arg
             @scope.add_temp '__context'
             scope_name = @scope.identify!
-            # @scope.add_arg block_arg
-            # code += "var #{block_arg} = _$ || nil, $context = #{block_arg}.$S;"
+
             blk = "\n%s%s = %s._p || nil, __context = %s._s, %s.p = null;\n%s" %
               [@indent, block_arg, scope_name, block_arg, scope_name, @indent]
 
@@ -805,9 +797,6 @@ module OpalScript
           "%s(%s))" % [dispatch, args]
         end
       else
-        # m_missing = " || __mm(#{meth.to_s.inspect})"
-        # dispatch = "((#{tmprecv} = #{recv_code}).$m#{mid}#{ m_missing })"
-        # splat ? "#{dispatch}.apply(null, #{args})" : "#{dispatch}(#{args})"
         dispatch = tmprecv ? "(#{tmprecv} = #{recv_code})#{mid}" : "#{recv_code}#{mid}"
         splat ? "#{dispatch}.apply(#{tmprecv || recv_code}, #{args})" : "#{dispatch}(#{args})"
       end
@@ -885,7 +874,7 @@ module OpalScript
       indent do
         in_scope(:class) do
           @scope.name = name
-          @scope.add_temp "#{ @scope.proto } = #{name}.prototype", "__scope = #{name}._scope"
+          @scope.add_temp "__scope = #{name}._scope"
 
           if Array === body.last
             # A single statement will need a block
@@ -1098,22 +1087,6 @@ module OpalScript
         "#{ current_self }#{ jsid } = #{ defcode }"
       else
         "def#{jsid} = #{defcode}"
-      end
-    end
-
-    ##
-    # Returns code used in debug mode to check arity of method call
-    def arity_check(args, opt, splat)
-      arity = args.size - 1
-      arity -= (opt.size - 1) if opt
-      arity -= 1 if splat
-      arity = -arity - 1 if opt or splat
-
-      aritycode = "var $arity = arguments.length; if ($arity !== 0) { $arity -= 1; }"
-      if arity < 0 # splat or opt args
-        aritycode + "if ($arity < #{-(arity + 1)}) { opal.arg_error($arity, #{arity}); }"
-      else
-        aritycode + "if ($arity !== #{arity}) { opal.arg_error($arity, #{arity}); }"
       end
     end
 
@@ -1390,7 +1363,6 @@ module OpalScript
     def process_ivar(exp, level)
       ivar = exp.shift.to_s[1..-1]
       part = RESERVED.include?(ivar) ? "['#{ivar}']" : ".#{ivar}"
-      @scope.add_ivar part
       "#{current_self}#{part}"
     end
 
