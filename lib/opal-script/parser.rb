@@ -655,6 +655,7 @@ module OpalScript
           end
 
           code = "#{@scope.to_vars}#{@indent}#{code}"
+
           scope_name = @scope.identity
         end
       end
@@ -663,8 +664,7 @@ module OpalScript
         itercode = "function(#{params.join ', '}) {\n#{code}\n#@indent}"
         itercode = "#{scope_name} = #{itercode}" if scope_name
 
-        @helpers[:block] = true
-        call.last << s(:js_tmp, "__block(#{itercode}, #{current_self})")
+        call << ("(%s = %s, %s._s = %s, %s)" % [tmp, itercode, tmp, current_self, tmp])
 
         process call, level
       end
@@ -743,7 +743,7 @@ module OpalScript
     # s(:call, recv, :mid, s(:arglist))
     # s(:call, nil, :mid, s(:arglist))
     def process_call(sexp, level)
-      recv, meth, arglist = sexp
+      recv, meth, arglist, iter = sexp
       mid = mid_to_jsid meth.to_s
 
       case meth
@@ -767,18 +767,41 @@ module OpalScript
 
       splat = arglist[1..-1].any? { |a| a.first == :splat }
 
+      if Array === arglist.last and arglist.last.first == :block_pass
+        block   = process s(:js_tmp, process(arglist.pop, :expr)), :expr
+      elsif iter
+        block   = iter
+      end
+
       recv ||= s(:self)
 
-      if splat and recv != [:self] and recv[0] != :lvar
+      if block
+        tmprecv = @scope.new_temp
+      elsif splat and recv != [:self] and recv[0] != :lvar
         tmprecv = @scope.new_temp
       end
 
       args      = ""
-      recv_code = process recv, :recv
-      args      = process arglist, :expr
 
-      dispatch = tmprecv ? "(#{tmprecv} = #{recv_code})#{mid}" : "#{recv_code}#{mid}"
-      splat ? "#{dispatch}.apply(#{tmprecv || recv_code}, #{args})" : "#{dispatch}(#{args})"
+      recv_code = process recv, :recv
+
+      args = process arglist, :expr
+
+      result = if block
+        dispatch = "(%s = %s, %s%s._p = %s, %s%s" %
+          [tmprecv, recv_code, tmprecv, mid, block, tmprecv, mid]
+
+        if splat
+          "%s.apply(null, %s))" % [dispatch, args]
+        else
+          "%s(%s))" % [dispatch, args]
+        end
+      else
+        dispatch = tmprecv ? "(#{tmprecv} = #{recv_code})#{mid}" : "#{recv_code}#{mid}"
+        splat ? "#{dispatch}.apply(#{tmprecv || recv_code}, #{args})" : "#{dispatch}(#{args})"
+      end
+
+      result
     end
 
     # s(:arglist, [arg [, arg ..]])
