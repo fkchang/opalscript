@@ -1361,16 +1361,24 @@ module OpalScript
       "#{current_self}#{part}"
     end
 
+    def get_gvar_id(id)
+      if /\=|\+|\-|\*|\/|\!|\?|\<|\>|\&|\||\^|\%|\~|\[|\`|\;/ =~ id.to_s
+        "__opal['#{id.to_s}']"
+      else
+        "$#{id}"
+      end
+    end
+
     # s(:gvar, gvar)
     def process_gvar(sexp, level)
-      sexp.shift.to_s[1..-1]
+      get_gvar_id sexp.shift.to_s[1..-1]
     end
 
     # s(:gasgn, :gvar, rhs)
     def process_gasgn(sexp, level)
       gvar = sexp[0].to_s[1..-1]
       rhs  = sexp[1]
-      "#{gvar} = #{process rhs, :expr}"
+      "#{get_gvar_id gvar} = #{process rhs, :expr}"
     end
 
     # s(:const, :const)

@@ -3,14 +3,6 @@ module Kernel
     false
   end
 
-  def ==(other)
-    `#{self} === other`
-  end
-
-  def ===(other)
-    `#{self} == other`
-  end
-
   def __send__(symbol, *args, &block)
     %x{
       return #{self}['$' + symbol].apply(#{self}, args);

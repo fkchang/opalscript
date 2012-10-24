@@ -1,11 +1,9 @@
 alpha
 class
 kernel
-nil_class
 boolean
 error
 regexp
-comparable
 enumerable
 array
 hash

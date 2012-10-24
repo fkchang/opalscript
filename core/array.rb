@@ -37,61 +37,6 @@ class Array < `Array`
     }
   end
 
-  def &(other)
-    %x{
-      var result = [],
-          seen   = {};
-
-      for (var i = 0, length = #{self}.length; i < length; i++) {
-        var item = #{self}[i];
-
-        if (!seen[item]) {
-          for (var j = 0, length2 = other.length; j < length2; j++) {
-            var item2 = other[j];
-
-            if ((item === item2) && !seen[item]) {
-              seen[item] = true;
-
-              result.push(item);
-            }
-          }
-        }
-      }
-
-      return result;
-    }
-  end
-
-  def *(other)
-    %x{
-      if (typeof(other) === 'string') {
-        return #{self}.join(other);
-      }
-
-      var result = [];
-
-      for (var i = 0; i < other; i++) {
-        result = result.concat(#{self});
-      }
-
-      return result;
-    }
-  end
-
-  def +(other)
-    `#{self}.slice().concat(other.slice())`
-  end
-
-  def -(other)
-    reject { |i| other.include? i }
-  end
-
-  def <<(object)
-    `#{self}.push(object);`
-
-    self
-  end
-
   def <=>(other)
     %x{
       if (#{self.hash} === #{other.hash}) {
@@ -109,22 +54,6 @@ class Array < `Array`
       }
 
       return 0;
-    }
-  end
-
-  def ==(other)
-    %x{
-      if (!other || (#{self}.length !== other.length)) {
-        return false;
-      }
-
-      for (var i = 0, length = #{self}.length; i < length; i++) {
-        if (!#{`#{self}[i]` == `other[i]`}) {
-          return false;
-        }
-      }
-
-      return true;
     }
   end
 

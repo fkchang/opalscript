@@ -32,14 +32,6 @@ class Time < `Date`
     `new Date()`
   end
 
-  def +(other)
-    Time.allocate(self.to_f + other.to_f)
-  end
-
-  def -(other)
-    Time.allocate(self.to_f - other.to_f)
-  end
-
   def <=>(other)
     to_f <=> other.to_f
   end

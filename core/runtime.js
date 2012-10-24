@@ -7,9 +7,6 @@ function Object(){}
 // Class' class
 function Class(){}
 
-// the class of nil
-function NilClass(){}
-
 // TopScope is used for inheriting constants from the top scope
 var TopScope = function(){};
 
@@ -294,9 +291,5 @@ Object.prototype.toString = function() {
 };
 
 Opal.top = new Object;
-
-Opal.klass(Object, Object, 'NilClass', NilClass)
-Opal.nil = new NilClass;
-Opal.nil.call = Opal.nil.apply = no_block_given;
 
 Opal.breaker  = new Error('unexpected break');

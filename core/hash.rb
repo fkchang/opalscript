@@ -72,35 +72,6 @@ class Hash
     }
   end
 
-  def ==(other)
-    %x{
-      if (#{self} === other) {
-        return true;
-      }
-
-      if (!other.map || !other.keys) {
-        return false;
-      }
-
-      if (#{self}.keys.length !== other.keys.length) {
-        return false;
-      }
-
-      var map  = #{self}.map,
-          map2 = other.map;
-
-      for (var i = 0, length = #{self}.keys.length; i < length; i++) {
-        var key = #{self}.keys[i], obj = map[key], obj2 = map2[key];
-
-        if (#{`obj` != `obj2`}) {
-          return false;
-        }
-      }
-
-      return true;
-    }
-  end
-
   def [](key)
     %x{
       var bucket = #{self}.map[key];
