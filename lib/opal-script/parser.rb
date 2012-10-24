@@ -1248,7 +1248,7 @@ module OpalScript
                      :stmt
                    end
       pre = "while (!("
-      code = "#{js_truthy expr})) {"
+      code = "#{process expr, :expr})) {"
 
       in_while do
         @while_loop[:closure] = true if stmt_level == :stmt_closure
