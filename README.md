@@ -4,6 +4,15 @@
 
 Working design docs - will be updated/amended/replaced/scrapped/thrown away etc.
 
+### Nil compiles to native null
+
+* Can no longer send methods to nil (all methods to nil will raise an exception)
+* Ruby falsyness extended to javascript falsyness (0, "", [], false, null)
+
+### No operator overloading
+
+* Due to native nil/null, `==` must also be a native operator (cannot overwrite ==)
+
 ## Differences
 
 ### Language
