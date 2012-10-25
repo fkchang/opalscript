@@ -79,10 +79,10 @@ module OpalTest
     end
   end
 
-  class Unit
-    # TODO: This should use the right Unit subclass. (BrowserRunner vs PhantomRunner)
+  class Runner
+    # TODO: This should use the right Runner subclass. (BrowserRunner vs PhantomRunner)
     def self.autorun
-      OpalTest::Unit.new.run
+      OpalTest::Runner.new.run
     end
 
     def run
@@ -122,10 +122,10 @@ module OpalTest
     end
   end
 
-  class BrowserRunner < Unit
+  class BrowserRunner < Runner
   end
 
-  class PhantomRunner < Unit
+  class PhantomRunner < Runner
   end
 end
 

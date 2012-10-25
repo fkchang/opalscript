@@ -1,1 +1,1 @@
-OpalTest::Unit.autorun
+OpalTest::Runner.autorun
