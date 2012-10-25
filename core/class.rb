@@ -3,11 +3,11 @@ class Class
     %x{
       function AnonClass(){};
       var klass   = boot_class(sup, AnonClass)
-      klass._name = nil;
+      klass._name = #{nil};
 
       sup.$inherited(klass);
 
-      if (block !== nil) {
+      if (block != #{nil}) {
         block.call(klass);
       }
 
@@ -90,7 +90,7 @@ class Class
 
   def define_method(name, &block)
     %x{
-      if (block === nil) {
+      if (block == null) {
         no_block_given();
       }
 
@@ -101,7 +101,7 @@ class Class
       #{self}.prototype[jsid] = block;
       #{self}._donate([jsid]);
 
-      return nil;
+      return null;
     }
   end
 
@@ -150,7 +150,7 @@ class Class
 
   def module_eval(&block)
     %x{
-      if (block === nil) {
+      if (block == null) {
         no_block_given();
       }
 

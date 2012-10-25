@@ -3,7 +3,21 @@ require 'opal-script/rake_task'
 
 OpalScript::RakeTask.new do |t|
   t.files        = []   # we handle this by Opal.runtime instead
-  t.parser       = true
+  # t.parser       = true
+end
+
+desc "Build opal-test"
+task :opal_test do
+  File.open('build/opal-test.js', 'w+') do |o|
+    o.puts OpalScript.build_files 'opal-test'
+  end
+end
+
+desc "Build all tests"
+task :tests do
+  File.open('build/tests.js', 'w+') do |o|
+    o.puts OpalScript.build_files 'test'
+  end
 end
 
 desc "Rebuild grammar.rb for opal parser"

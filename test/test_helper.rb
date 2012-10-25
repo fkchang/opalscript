@@ -1,0 +1,1 @@
+OpalTest::Unit.autorun

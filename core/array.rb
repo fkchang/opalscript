@@ -1,6 +1,6 @@
 class Array < `Array`
   %x{
-    Array_prototype._isArray = true;
+    Array.prototype._isArray = true;
   }
 
   include Enumerable
@@ -319,6 +319,22 @@ class Array < `Array`
 
   def empty?
     `!#{self}.length`
+  end
+
+  def eql?(other)
+    %x{
+      if (!other || (#{self}.length !== other.length)) {
+        return false;
+      }
+
+      for (var i = 0, length = #{self}.length; i < length; i++) {
+        if (!#{`#{self}[i]` == `other[i]`}) {
+          return false;
+        }
+      }
+
+      return true;
+    }
   end
 
   def fetch(index, defaults, &block)
@@ -660,7 +676,7 @@ class Array < `Array`
           return __breaker.$v;
         }
 
-        if (value !== false && value !== nil) {
+        if (value) {
           result.push(item);
         }
       }

@@ -475,11 +475,9 @@ module OpalScript
       if stmt
         stmt = returns stmt unless @scope.class_scope?
         code = process stmt, :stmt
-      else
-        code = "nil"
       end
 
-      code
+      code.to_s
     end
 
     # s(:js_return, sexp)
@@ -642,8 +640,8 @@ module OpalScript
             @scope.add_temp '__context'
             scope_name = @scope.identify!
 
-            blk = "\n%s%s = %s._p || nil, __context = %s._s, %s.p = null;\n%s" %
-              [@indent, block_arg, scope_name, block_arg, scope_name, @indent]
+            blk = "\n%s%s = %s._p, __context = %s && %s._s, %s.p = null;\n%s" %
+              [@indent, block_arg, scope_name, block_arg, block_arg, scope_name, @indent]
 
             code = blk + code
           end
@@ -721,7 +719,7 @@ module OpalScript
         end
       end
 
-      out.join(", \n#@indent") + ', nil'
+      out.join(", \n#@indent")
     end
 
     def handle_alias_native(sexp)
@@ -876,7 +874,8 @@ module OpalScript
           @scope.name = name
           @scope.add_temp "__scope = #{name}._scope"
 
-          if Array === body.last
+          # FIXME: remove?
+          if Array === body.last and false
             # A single statement will need a block
             needs_block = body.last.first != :block
             body.last.first == :block
@@ -1053,8 +1052,8 @@ module OpalScript
             @scope.add_temp '__context'
             @scope.add_temp yielder
 
-            blk = "\n%s%s = %s._p || nil, __context = %s._s, %s._p = null;\n%s" %
-              [@indent, yielder, scope_name, yielder, scope_name, @indent]
+            blk = "\n%s%s = %s._p, __context = %s && %s._s, %s._p = null;\n%s" %
+              [@indent, yielder, scope_name, yielder, yielder, scope_name, @indent]
 
             code = blk + code
           end
@@ -1655,11 +1654,11 @@ module OpalScript
     def process_colon2(sexp, level)
       base = sexp[0]
       name = sexp[1]
-      "(%s)._scope.%s" % [process(base, :expr), name.to_s]
+      "%s.%s" % [process(base, :expr), name.to_s]
     end
 
     def process_colon3(exp, level)
-      "__opal.Object._scope.#{exp.shift.to_s}"
+      "__opal.Object.#{exp.shift.to_s}"
     end
 
     # super a, b, c
@@ -1715,7 +1714,8 @@ module OpalScript
     #
     # s(:op_asgn_or, s(:lvar, :a), s(:lasgn, :a, rhs))
     def process_op_asgn_or(exp, level)
-      process s(:or, exp.shift, exp.shift), :expr
+      "#{process exp.shift, :expr} || (#{process exp.shift, :expr})"
+      # process s(:or, exp.shift, exp.shift), :expr
     end
 
     def process_op_asgn1(sexp, level)

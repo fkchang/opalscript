@@ -1,6 +1,4 @@
 class Time < `Date`
-  include Comparable
-
   def self.at(seconds, frac = 0)
     `new Date(seconds * 1000 + frac)`
   end

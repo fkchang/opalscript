@@ -195,13 +195,27 @@ module Kernel
     }
   end
 
-  def puts(*strs)
+def puts(*strs)
     %x{
       for (var i = 0; i < strs.length; i++) {
-        __opal.puts(#{ `strs[i]`.to_s });
+        if(strs[i] instanceof Array) {
+          #{ puts *strs }
+        } else {
+          if (strs[i] == null) {
+            __opal.puts(strs[i]);
+          }
+          else {
+            __opal.puts(#{ `strs[i]`.to_s });
+          }
+        }
       }
     }
     nil
+  end
+
+  def p(*args)
+    `console.log.apply(console, args);`
+    args.length <= 1 ? args[0] : args
   end
 
   alias print puts
