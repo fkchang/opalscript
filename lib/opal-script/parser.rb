@@ -663,7 +663,8 @@ module OpalScript
         itercode = "function(#{params.join ', '}) {\n#{code}\n#@indent}"
         itercode = "#{scope_name} = #{itercode}" if scope_name
 
-        call << ("(%s = %s, %s._s = %s, %s)" % [tmp, itercode, tmp, current_self, tmp])
+        # call[3] << s(:js_tmp, ("(%s = %s, %s._s = %s, %s)" % [tmp, itercode, tmp, current_self, tmp]))
+        call[3] << s(:js_tmp, "__bind(#{itercode}, #{current_self})")
 
         process call, level
       end
@@ -744,6 +745,7 @@ module OpalScript
     def process_call(sexp, level)
       recv, meth, arglist, iter = sexp
       mid = mid_to_jsid meth.to_s
+      recv ||= s(:self)
 
       case meth
       when :attr_reader, :attr_writer, :attr_accessor
@@ -752,6 +754,10 @@ module OpalScript
         return js_block_given(sexp, level)
       when :alias_native
         return handle_alias_native(sexp) if @scope.class_scope?
+      when :class
+        return "#{process recv, :expr}.constructor"
+      when :respond_to?
+        return handle_respond_to(sexp, level)
       when :require
         path = arglist[1]
 
@@ -760,8 +766,6 @@ module OpalScript
         end
 
         return "//= require #{path[1]}"
-      when :respond_to?
-        return handle_respond_to(sexp, level)
       end
 
       splat = arglist[1..-1].any? { |a| a.first == :splat }
@@ -771,8 +775,6 @@ module OpalScript
       elsif iter
         block   = iter
       end
-
-      recv ||= s(:self)
 
       if block
         tmprecv = @scope.new_temp
@@ -873,36 +875,17 @@ module OpalScript
       indent do
         in_scope(:class) do
           @scope.name = name
-          @scope.add_temp "__scope = #{name}._scope"
-
-          # FIXME: remove?
-          if Array === body.last and false
-            # A single statement will need a block
-            needs_block = body.last.first != :block
-            body.last.first == :block
-            last_body_statement = needs_block ? body.last : body.last.last
-
-            if last_body_statement and Array === last_body_statement
-              if [:defn, :defs].include? last_body_statement.first
-                body[-1] = s(:block, body[-1]) if needs_block
-                body.last << s(:nil)
-              end
-            end
-          end
 
           body = returns(body)
           body = process body, :stmt
-          code = "\n#{@scope.to_donate_methods}"
-          code += @indent + @scope.to_vars + "\n\n#@indent" + body
+          code = @indent + @scope.to_vars + "\n#@indent" + body
         end
       end
 
       spacer  = "\n#{@indent}#{INDENT}"
       cls     = "function #{name}() {};"
-      boot    = "#{name} = __klass(__base, __super, #{name.inspect}, #{name});"
-      comment = "#{spacer}// line #{ sexp.line }, #{ @file }, class #{ name }"
 
-      "(function(__base, __super){#{comment}#{spacer}#{cls}#{spacer}#{boot}\n#{code}\n#{@indent}})(#{base}, #{sup})"
+      "(function(){#{spacer}#{cls}\n#{code}\n#{@indent}})(#{base}, #{sup})"
     end
 
     # s(:sclass, recv, body)
@@ -1188,10 +1171,7 @@ module OpalScript
           hash_obj[k] = process(vals[i], :expr)
         end
 
-        map = hash_keys.map { |k| "#{k}: #{hash_obj[k]}"}
-
-        @helpers[:hash2] = true
-        "__hash2({#{ map.join(', ') }})"
+        "{ " + hash_keys.map { |k| "#{k}: #{hash_obj[k]}"}.join(', ') + " }"
       else
         @helpers[:hash] = true
         "__hash(#{sexp.map { |p| process p, :expr }.join ', '})"
@@ -1380,7 +1360,7 @@ module OpalScript
 
     # s(:const, :const)
     def process_const(sexp, level)
-      "__scope.#{sexp.shift}"
+      sexp.shift.to_s
     end
 
     # s(:cdecl, :const, rhs)
@@ -1652,11 +1632,11 @@ module OpalScript
     def process_colon2(sexp, level)
       base = sexp[0]
       name = sexp[1]
-      "%s.%s" % [process(base, :expr), name.to_s]
+      "#{process base, :expr}.#{name}"
     end
 
     def process_colon3(exp, level)
-      "__opal.Object.#{exp.shift.to_s}"
+      exp.shift.to_s
     end
 
     # super a, b, c
