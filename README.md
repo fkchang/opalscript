@@ -44,3 +44,17 @@ Working design docs - will be updated/amended/replaced/scrapped/thrown away etc.
 * Parser now outputs all operators (+, -, /, *, <, <=, >=, >, ==, ===) as native js operators
 * Gvars now compile into direct js variables (e.g. `$foo` compiles into `foo`)
 * Blocks and block_pass are now passed as last arguments to methods (just a normal argument..)
+
+
+##
+# Handling properties
+# #######
+#
+# self.bar
+# => (_a = self, _b = _a.bar, typeof(_b) === 'function' ? _a.bar() : _b)
+
+##
+# Handling foo[bar]
+# #################
+#
+# ..
