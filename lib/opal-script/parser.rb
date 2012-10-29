@@ -149,9 +149,9 @@ module OpalScript
     # @return [String]
     def mid_to_jsid(mid)
       if /\=|\+|\-|\*|\/|\!|\?|\<|\>|\&|\||\^|\%|\~|\[/ =~ mid.to_s
-        "['#{mid}']"
+        "['$#{mid}']"
       else
-        '.' + mid
+        '.$' + mid
       end
     end
 
