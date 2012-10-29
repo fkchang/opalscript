@@ -9,7 +9,9 @@ module Kernel
     }
   end
 
-  alias eql? ==
+  def eql?(other)
+    self == other
+  end
 
   def Array(object)
     %x{
@@ -22,36 +24,6 @@ module Kernel
 
       return [object];
     }
-  end
-
-  def attribute_get(name)
-    %x{
-      var meth = '$' + name;
-      if (#{self}[meth]) {
-        return #{self}[meth]();
-      }
-
-      meth += '?';
-      if (#{self}[meth]) {
-        return #{self}[meth]()
-      }
-
-      return nil;
-    }
-  end
-
-  def attribute_set(name, value)
-  %x{
-    if (#{self}['$' + name + '=']) {
-      return #{self}['$' + name + '='](value);
-    }
-
-    return nil;
-  }
-  end
-
-  def class
-    `return #{self}._klass`
   end
 
   def define_singleton_method(name, &body)
@@ -163,7 +135,7 @@ module Kernel
     }
   end
 
-  alias kind_of? is_a?
+  # alias kind_of? is_a?
 
   def lambda(&block)
     block
@@ -218,7 +190,7 @@ def puts(*strs)
     args.length <= 1 ? args[0] : args
   end
 
-  alias print puts
+  # alias print puts
 
   def raise(exception, string)
     %x{
@@ -237,11 +209,7 @@ def puts(*strs)
     `max == null ? Math.random() : Math.floor(Math.random() * max)`
   end
 
-  def respond_to?(name)
-    `!!#{self}['$' + name]`
-  end
-
-  alias send __send__
+  # alias send __send__
 
   def singleton_class
     %x{

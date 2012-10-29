@@ -1,5 +1,5 @@
 class Range
-  include Enumerable
+  # include Enumerable
 
   %x{
     Range.prototype._isRange = true;

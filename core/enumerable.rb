@@ -254,7 +254,7 @@ module Enumerable
     }
   end
 
-  alias find detect
+  # alias find detect
 
   def find_all(&block)
     %x{
@@ -376,9 +376,9 @@ module Enumerable
     }
   end
 
-  alias select find_all
+  # alias select find_all
 
-  alias take first
+  # alias take first
 
-  alias to_a entries
+  # alias to_a entries
 end

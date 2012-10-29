@@ -72,6 +72,28 @@ Opal.klass = function(base, superklass, id, constructor) {
   return klass;
 };
 
+// FIXME: remove this line
+Object.rb_name = 'Object';
+
+Opal.klass = function(parent, klass, name, superklass) {
+  // if (parent === Object) {
+    Opal[name] = klass;
+  // }
+
+  if (!superklass) {
+    superklass = Object;
+  }
+
+  klass.rb_name = name;
+
+  if (!superklass.rb_name) {
+    superklass.rb_name = name;
+    return superklass;
+  }
+
+  return klass;
+};
+
 // Define new module (or return existing module)
 Opal.module = function(base, id, constructor) {
   var klass;

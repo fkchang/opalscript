@@ -3,7 +3,7 @@ class Array < `Array`
     Array.prototype._isArray = true;
   }
 
-  include Enumerable
+  # include Enumerable
 
   def self.[](*objects)
     %x{

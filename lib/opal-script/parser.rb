@@ -92,8 +92,8 @@ module OpalScript
       @unique   = 0
 
       @helpers  = {
-        :breaker  => true,
-        :slice    => true
+        # :breaker  => true,
+        # :slice    => true
       }
 
       top @grammar.parse(source, file)
@@ -179,12 +179,13 @@ module OpalScript
           code = @indent + process(s(:scope, sexp), :stmt)
         }
 
-        # vars << "__opal = Opal"
+        vars << "_opal = Opal"
         # vars << "self = __opal.top"
         # vars << "__scope = __opal"
         # vars << "def = #{current_self}._klass.prototype" if @scope.defines_defn
-        # vars.concat @helpers.keys.map { |h| "__#{h} = __opal.#{h}" }
-        var_code = (vars.empty? ? '' : "")
+        vars.concat @helpers.keys.map { |h| "_#{h} = _opal.#{h}" }
+        # var_code = (vars.empty? ? '' : "")
+        var_code = "#{INDENT}var #{vars.join ', ' };\n"
 
         code = var_code + INDENT + @scope.to_vars + "\n" + code
       end
@@ -733,13 +734,6 @@ module OpalScript
       "%s%s = %s.%s" % [@scope.proto, meth, @scope.proto, func]
     end
 
-    def handle_respond_to(sexp, level)
-      recv, mid, arglist = sexp
-      recv ||= s(:self)
-      meth = process(arglist[1], level) if arglist[1]
-      "(!!#{process(recv, level)}['$' + #{meth}])"
-    end
-
     # s(:call, recv, :mid, s(:arglist))
     # s(:call, nil, :mid, s(:arglist))
     def process_call(sexp, level)
@@ -757,7 +751,8 @@ module OpalScript
       when :class
         return "#{process recv, :expr}.constructor"
       when :respond_to?
-        return handle_respond_to(sexp, level)
+        rmeth = process(arglist[1], level) if arglist[1]
+        return "(!!#{process(recv, level)}['$' + #{rmeth}])"
       when :require
         path = arglist[1]
 
@@ -884,8 +879,10 @@ module OpalScript
 
       spacer  = "\n#{@indent}#{INDENT}"
       cls     = "function #{name}() {};"
+      parent  = "_opal"
+      boot    = "\n#{@indent}#{INDENT}#{name} = _klass(#{parent}, #{name}, '#{name}', _sup)"
 
-      "(function(){#{spacer}#{cls}\n#{code}\n#{@indent}})(#{base}, #{sup})"
+      "(function(_sup){#{spacer}#{cls}#{boot}\n#{code}\n#{@indent}})(#{sup})"
     end
 
     # s(:sclass, recv, body)
@@ -909,7 +906,6 @@ module OpalScript
       cid = sexp[0]
       body = sexp[1]
       code = nil
-      @helpers[:module] = true
 
       if Symbol === cid or String === cid
         base = current_self
@@ -1171,7 +1167,8 @@ module OpalScript
           hash_obj[k] = process(vals[i], :expr)
         end
 
-        "{ " + hash_keys.map { |k| "#{k}: #{hash_obj[k]}"}.join(', ') + " }"
+        @helpers[:hash] = true
+        "_hash({ " + hash_keys.map { |k| "#{k}: #{hash_obj[k]}"}.join(', ') + " })"
       else
         @helpers[:hash] = true
         "__hash(#{sexp.map { |p| process p, :expr }.join ', '})"
@@ -1340,7 +1337,7 @@ module OpalScript
 
     def get_gvar_id(id)
       if /\=|\+|\-|\*|\/|\!|\?|\<|\>|\&|\||\^|\%|\~|\[|\`|\;/ =~ id.to_s
-        "__opal['#{id.to_s}']"
+        "_opal['#{id.to_s}']"
       else
         "$#{id}"
       end
@@ -1360,14 +1357,14 @@ module OpalScript
 
     # s(:const, :const)
     def process_const(sexp, level)
-      sexp.shift.to_s
+      "_opal.#{sexp.shift}"
     end
 
     # s(:cdecl, :const, rhs)
     def process_cdecl(sexp, level)
       const = sexp[0]
       rhs   = sexp[1]
-      "__scope.#{const} = #{process rhs, :expr}"
+      "_opal.#{const} = #{process rhs, :expr}"
     end
 
     # s(:return [val])
@@ -1636,7 +1633,7 @@ module OpalScript
     end
 
     def process_colon3(exp, level)
-      exp.shift.to_s
+      "_opal.#{exp.shift}"
     end
 
     # super a, b, c

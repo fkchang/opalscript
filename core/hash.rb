@@ -1,5 +1,5 @@
 class Hash
-  include Enumerable
+  # include Enumerable
 
   %x{
     __hash = Opal.hash = function() {
