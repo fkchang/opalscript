@@ -1,6 +1,12 @@
 require 'bundler/setup'
 require 'opal-script/rake_task'
 
+task :default do
+  File.open('build/out.js', 'w+') do |o|
+    o.puts OpalScript.parse(File.read('build/in.rb'))
+  end
+end
+
 OpalScript::RakeTask.new do |t|
   t.files        = []   # we handle this by Opal.runtime instead
   # t.parser       = true

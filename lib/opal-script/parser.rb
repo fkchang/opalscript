@@ -149,9 +149,9 @@ module OpalScript
     # @return [String]
     def mid_to_jsid(mid)
       if /\=|\+|\-|\*|\/|\!|\?|\<|\>|\&|\||\^|\%|\~|\[/ =~ mid.to_s
-        "['$#{mid}']"
+        "['#{mid}']"
       else
-        '.$' + mid
+        '.' + mid
       end
     end
 
@@ -179,13 +179,14 @@ module OpalScript
           code = @indent + process(s(:scope, sexp), :stmt)
         }
 
-        vars << "__opal = Opal"
-        vars << "self = __opal.top"
-        vars << "__scope = __opal"
-        vars << "def = #{current_self}._klass.prototype" if @scope.defines_defn
-        vars.concat @helpers.keys.map { |h| "__#{h} = __opal.#{h}" }
+        # vars << "__opal = Opal"
+        # vars << "self = __opal.top"
+        # vars << "__scope = __opal"
+        # vars << "def = #{current_self}._klass.prototype" if @scope.defines_defn
+        # vars.concat @helpers.keys.map { |h| "__#{h} = __opal.#{h}" }
+        var_code = (vars.empty? ? '' : "")
 
-        code = "#{INDENT}var #{vars.join ', '};\n" + INDENT + @scope.to_vars + "\n" + code
+        code = var_code + INDENT + @scope.to_vars + "\n" + code
       end
 
       "(function() {\n#{ code }\n})();"
@@ -943,18 +944,13 @@ module OpalScript
       indent do
         in_scope(:module) do
           @scope.name = name
-          @scope.add_temp "__scope = #{name}._scope"
           body = process body, :stmt
           code = @indent + @scope.to_vars + "\n\n#@indent" + body + "\n#@indent" + @scope.to_donate_methods
         end
       end
 
-      spacer  = "\n#{@indent}#{INDENT}"
-      cls     = "function #{name}() {};"
-      boot    = "#{name} = __module(__base, #{name.inspect}, #{name});"
-      comment = "#{spacer}// line #{ sexp.line }, #{ @file }, module #{ name }"
-
-      "(function(__base){#{comment}#{spacer}#{cls}#{spacer}#{boot}\n#{code}\n#{@indent}})(#{base})"
+      @scope.add_local name
+      "#{name} = (function(#{name}){#{code}})({})"
     end
 
     def process_undef(exp, level)
@@ -1073,6 +1069,8 @@ module OpalScript
         else
           "#{ recv }#{ jsid } = #{ defcode }"
         end
+      elsif @scope.module?
+        "#{@scope.name}#{jsid} = #{defcode}"
       elsif @scope.class_scope?
         @scope.methods << "$#{mid}"
         if uses_super
